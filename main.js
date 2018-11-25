@@ -2,8 +2,8 @@ mapboxgl.accessToken = 'pk.eyJ1IjoibWh1dHRpMSIsImEiOiJjam92aGF2dnkwZDM4M2tyejRsM
 var map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/light-v9',
-    zoom: 11,
-    center: [8.54329, 47.36356]
+    zoom: 7,
+    center: [8.1336, 46.604]
 });
 
 var lat = 0;
@@ -87,6 +87,9 @@ map.on('load', async function () {
     });
 
     var coordinates = await getLocationCoordinates();
+
+    map.setCenter([coordinates[1], coordinates[0]]);
+    map.setZoom(11);
 
     var geoData = await getRoute(coordinates[0], coordinates[1]);
     var routes = await geoData.json();
