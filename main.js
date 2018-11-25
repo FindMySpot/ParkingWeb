@@ -11,10 +11,21 @@ var lon = 0;
 var query = '';
 
 function getLocationCoordinates() {
-    var a = navigator.geolocation.getCurrentPosition(function(location) {
-        lat = location.coords.latitude;
-        lon = location.coords.longitude;
-    });
+    return new Promise(resolve => navigator.geolocation.getCurrentPosition(function(location) {
+        resolve([location.coords.latitude, location.coords.longitude]);
+    }));
+};
+
+function getRoute(lat, lon) {
+    var url = "http://23.97.154.233:8080/get-possible-routes/v1/lat/"+lat+"/lon/"+lon+"/destination/zurich"
+
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", url); 
+    xmlHttp.send();
+
+    xmlHttp.onreadystatechange=(e)=>{
+        console.log(xmlHttp.responseText)
+    }
 };
 
 document.getElementById('searchbar').onkeydown = function(event) {
@@ -25,7 +36,7 @@ document.getElementById('searchbar').onkeydown = function(event) {
     }
 }
 
-map.on('load', function () {
+map.on('load', async function () {
     map.addSource('stations', {
         type: 'geojson',
         data: 'http://23.97.154.233:8080/geo/stations'
@@ -68,24 +79,9 @@ map.on('load', function () {
 
     
 
-    getLocationCoordinates();  
+    var coordinates = await getLocationCoordinates();  
 
-    function getRoute(lat, lon) {
-        console.log('Get the route');
-        var url = 'http://23.97.154.233:8080/get-possible-routes/v1/lat/{0}/lon/{1}/destination/lausan'.format(lat, lon);
-
-        console.log(url)
-
-        var xmlHttp = new XMLHttpRequest();
-        xmlHttp.open( "GET", url); 
-        xmlHttp.send();
-
-        xmlHttp.onreadystatechange=(e)=>{
-            console.log(xmlHttp.responseText)
-        }
-    };
-
-    
+    getRoute(coordinates[0], coordinates[1]);
 
 
     // Create a popup, but don't add it to the map yet.
