@@ -234,11 +234,11 @@ map.on('load', async function () {
             "circle-color": [
                 "interpolate",
                 ["linear"],
-                ["get", "Number_parking_spaces"],
-                1, "#B42222",
-                10, "#EC8F4F",
-                50, "#F6B243",
-                100, "#9F9437"
+                ["get", "Fill_factor"],
+                0, "#FF4444",
+                0.2, "#FF7F50",
+                0.5, "#EBBB32",
+                1, "#43F665"
             ],
             "circle-radius": 6
         },
