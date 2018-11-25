@@ -18,14 +18,7 @@ function getLocationCoordinates() {
 
 function getRoute(lat, lon) {
     var url = "http://23.97.154.233:8080/get-possible-routes/v1/lat/"+lat+"/lon/"+lon+"/destination/zurich"
-
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", url); 
-    xmlHttp.send();
-
-    xmlHttp.onreadystatechange=(e)=>{
-        console.log(xmlHttp.responseText)
-    }
+    return fetch(url);
 };
 
 document.getElementById('searchbar').onkeydown = function(event) {
@@ -41,21 +34,6 @@ map.on('load', async function () {
         type: 'geojson',
         data: 'http://23.97.154.233:8080/geo/stations'
     });
-    //map.addSource('route', {
-    //    type: 'geojson',
-    //    data: 'http://23.97.154.233:8080/route/start/tiefenbrunnen/end/laus'
-    //});
-
-    //map.addLayer({
-    //    "id": "route-line",
-    //    "type": "line",
-    //    "source": "route",
-    //    "paint": {
-    //        "line-width": 6,
-    //        "line-color": "#23202A"
-    //    },
-    //    "filter": ["==", "$type", "LineString"],
-    //});
 
 
     map.addLayer({
@@ -81,8 +59,24 @@ map.on('load', async function () {
 
     var coordinates = await getLocationCoordinates();  
 
-    getRoute(coordinates[0], coordinates[1]);
+    var geoData = await getRoute(coordinates[0], coordinates[1]);
+    var routes = await geoData.json();
 
+    map.addSource('route', {
+        type: 'geojson',
+        data: routes[0]['train_route']['geo_dict']
+    });
+
+    map.addLayer({
+        "id": "route-line",
+        "type": "line",
+        "source": "route",
+        "paint": {
+            "line-width": 6,
+            "line-color": "#23202A"
+        },
+        "filter": ["==", "$type", "LineString"],
+    });
 
     // Create a popup, but don't add it to the map yet.
     var popup = new mapboxgl.Popup({
