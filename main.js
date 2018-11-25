@@ -24,45 +24,26 @@ function getRoute(lat, lon, query) {
     return fetch(url);
 };
 
-
-
-function addRouteToMap() {
-    map.addSource('route', {
-        type: 'geojson',
-        data: 'http://23.97.154.233:8080/route/start/tiefenbrunnen/end/laus'
-    });
-
-    map.addLayer({
-        "id": "route-line",
-        "type": "line",
-        "source": "route",
-        "paint": {
-            "line-width": 6,
-            "line-color": "#23202A"
-        },
-        "filter": ["==", "$type", "LineString"],
-    });
-};
-
 document.getElementById('searchbar').onkeydown = async function(event) {
     // 13 is for Enter
     if (event.keyCode == 13) {
+        var stationsLayer = map.getLayer('stations-dots');
+        if(typeof stationsLayer !== 'undefined') {
+            map.removeLayer("station-dots");
+        }
+        
         query = document.getElementById('searchbar').value;
-
-        try {
-            await map.removeLayer("route-line");
-            await map.removeSource('route');
-        }
-        catch(err) {
-            console.log("WARNING Can't delete inexistent resource.");
+        
+        var routeLayer = map.getLayer('route-line');
+        if(typeof routeLayer !== 'undefined') {
+            map.removeLayer('route-line');
+            map.removeSource('route');
         }
 
-        try {
-            await map.removeLayer("driving-route-line");
-            await map.removeSource('driving-route');
-        }
-        catch(err) {
-            console.log("WARNING Can't delete inexistent resource.");
+        var drivingLayer = map.getLayer('driving-route-line');
+        if(typeof drivingLayer !== 'undefined') {
+            map.removeLayer('driving-route-line');
+            map.removeSource('driving-route');
         }
         
         var coordinates = await getLocationCoordinates();
@@ -146,8 +127,6 @@ document.getElementById('searchbar').onkeydown = async function(event) {
         map.fitBounds(bounds, {
             padding: 40
         });
-    
-        map.removeLayer("station-dots");
     }
 };
 
