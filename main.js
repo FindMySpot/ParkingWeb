@@ -29,7 +29,8 @@ function getRoute(lat, lon, query) {
 document.getElementById('searchbar').onkeydown = async function(event) {
     // 13 is for Enter
     if (event.keyCode == 13) {
-        var stationsLayer = map.getLayer('stations-dots');
+
+        var stationsLayer = map.getLayer('station-dots');
         if(typeof stationsLayer !== 'undefined') {
             map.removeLayer("station-dots");
         }
