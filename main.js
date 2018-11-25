@@ -96,7 +96,8 @@ document.getElementById('searchbar').onkeydown = async function(event) {
 
         park_marker_popup.setLngLat(park['geometry']['coordinates'])
             .setHTML("<b>" + park["station_name"] + "</b><br /><span>Total Spaces: " + 
-            park["properties"]["Number_parking_spaces"] + "</span>" + 
+            park["properties"]["Number_parking_spaces"] + "</span><br /><span>" + 
+            "Available Spaces: " + park["properties"]["Number_occupied_spaces"] + "</span>" +
             "<br /><span>Daily parking fee: " + daily_parking_fee + "</span><form><input class='MyButton' type='button' value='Reserve a spot' onclick='reserveSpot(\""+park['station_name']+"\")'/></form>")
             .addTo(map);
 
@@ -257,6 +258,7 @@ map.on('load', async function () {
         var coordinates = e.features[0].geometry.coordinates.slice();
         var description = e.features[0].properties.Name;
         var totalSpaces = e.features[0].properties.Number_parking_spaces;
+        var availableSpaces = e.features[0].properties.Number_occupied_spaces;
         // Ensure that if the map is zoomed out such that multiple
         // copies of the feature are visible, the popup appears
         // over the copy being pointed to.
@@ -267,7 +269,7 @@ map.on('load', async function () {
         // Populate the popup and set its coordinates
         // based on the feature found.
         popup.setLngLat(coordinates)
-            .setHTML("<b>" + description + "</b><br /><span>Total Spaces: " + totalSpaces + "</span>")
+            .setHTML("<b>" + description + "</b><br /><span>Total Spaces: " + totalSpaces + "</span><br/><span>Available Spaces: " + availableSpaces + "</span>")
             .addTo(map);
     });
 
