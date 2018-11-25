@@ -18,14 +18,7 @@ function getLocationCoordinates() {
 
 function getRoute(lat, lon) {
     var url = "http://23.97.154.233:8080/get-possible-routes/v1/lat/"+lat+"/lon/"+lon+"/destination/zurich"
-
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", url); 
-    xmlHttp.send();
-
-    xmlHttp.onreadystatechange=(e)=>{
-        console.log(xmlHttp.responseText)
-    }
+    return fetch(url);
 };
 
 function addRouteToMap() {
@@ -80,13 +73,6 @@ map.on('load', async function () {
         "filter": ["==", "$type", "Point"],
     });
 
-    
-
-    var coordinates = await getLocationCoordinates();  
-
-    getRoute(coordinates[0], coordinates[1]);
-
-
     // Create a popup, but don't add it to the map yet.
     var popup = new mapboxgl.Popup({
         closeButton: false,
@@ -119,6 +105,27 @@ map.on('load', async function () {
         popup.remove();
     });
 
+    var coordinates = await getLocationCoordinates();
 
+    var geoData = await getRoute(coordinates[0], coordinates[1]);
+    var routes = await geoData.json();
+
+    map.addSource('route', {
+        type: 'geojson',
+        data: routes[0]['train_route']['geo_dict']
+    });
+
+    map.addLayer({
+        "id": "route-line",
+        "type": "line",
+        "source": "route",
+        "paint": {
+            "line-width": 6,
+            "line-color": "#23202A"
+        },
+        "filter": ["==", "$type", "LineString"],
+    });
+
+    map.removeLayer("station-dots");
 
 });
