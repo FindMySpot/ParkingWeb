@@ -98,7 +98,7 @@ document.getElementById('searchbar').onkeydown = async function(event) {
             .setHTML("<b>" + park["station_name"] + "</b><br /><span>Total Spaces: " + 
             park["properties"]["Number_parking_spaces"] + "</span><br /><span>" + 
             "Available Spaces: " + park["properties"]["Number_occupied_spaces"] + "</span>" +
-            "<br /><span>Daily parking fee: " + daily_parking_fee + "</span><form><input class='MyButton' type='button' value='Reserve a spot' onclick='reserveSpot(\""+park['station_name']+"\")'/></form>")
+            "<br /><span>Daily Parking Fee: " + daily_parking_fee + ".-</span><form><input class='MyButton' type='button' value='Reserve a spot' onclick='reserveSpot(\""+park['station_name']+"\")'/></form>")
             .addTo(map);
 
         park_marker = new mapboxgl.Marker({color: "red"})
