@@ -9,6 +9,8 @@ var map = new mapboxgl.Map({
 var lat = 0;
 var lon = 0;
 var query = '';
+var park_marker = null;
+var park_marker_popup = null;
 
 function getLocationCoordinates() {
     if (lat !== 0) {
@@ -45,22 +47,31 @@ document.getElementById('searchbar').onkeydown = async function(event) {
             map.removeLayer('driving-route-line');
             map.removeSource('driving-route');
         }
+
+        if (park_marker !== null) {
+            park_marker.remove();
+            park_marker_popup.remove();
+        }
         
         var coordinates = await getLocationCoordinates();
 
         var geoData = await getRoute(coordinates[0], coordinates[1], query);
         var routes = await geoData.json();
-        var geo = routes[0]['train_route']['geo_dict'];
         var park = routes[0]['car_route']['station'];
 
         map.setCenter([coordinates[1], coordinates[0]]);
         map.setZoom(11);
 
-        new mapboxgl.Marker()
-            .setLngLat([coordinates[1], coordinates[0]])
+        park_marker_popup = new mapboxgl.Popup({
+        closeButton: true,
+        closeOnClick: true
+        });
+
+        park_marker_popup.setLngLat(park['geometry']['coordinates'])
+            .setHTML("<b>" + park["station_name"] + "</b><br /><span>Total Spaces: " + park["properties"]["Number_parking_spaces"] + "</span>")
             .addTo(map);
 
-        new mapboxgl.Marker({color: "red"})
+        park_marker = new mapboxgl.Marker({color: "red"})
             .setLngLat(park['geometry']['coordinates'])
             .addTo(map);
 
