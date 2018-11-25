@@ -11,6 +11,9 @@ var lon = 0;
 var query = '';
 
 function getLocationCoordinates() {
+    if (lat !== 0) {
+        return new Promise(resolve => resolve([lat, lon]))
+    }
     return new Promise(resolve => navigator.geolocation.getCurrentPosition(function(location) {
         resolve([location.coords.latitude, location.coords.longitude]);
     }));
@@ -53,14 +56,64 @@ document.getElementById('searchbar').onkeydown = async function(event) {
         catch(err) {
             console.log("WARNING Can't delete inexistent resource.");
         }
+
+        try {
+            await map.removeLayer("driving-route-line");
+            await map.removeSource('driving-route');
+        }
+        catch(err) {
+            console.log("WARNING Can't delete inexistent resource.");
+        }
         
         var coordinates = await getLocationCoordinates();
+
         var geoData = await getRoute(coordinates[0], coordinates[1], query);
         var routes = await geoData.json();
         var geo = routes[0]['train_route']['geo_dict'];
+        var park = routes[0]['car_route']['station'];
 
         map.setCenter([coordinates[1], coordinates[0]]);
         map.setZoom(11);
+
+        new mapboxgl.Marker()
+            .setLngLat([coordinates[1], coordinates[0]])
+            .addTo(map);
+
+        new mapboxgl.Marker({color: "red"})
+            .setLngLat(park['geometry']['coordinates'])
+            .addTo(map);
+
+        var driving_route = {
+            type: "FeatureCollection",
+            features: [{
+                type: "Feature",
+                properties: {},
+                geometry: {
+                    type: "LineString",
+                    coordinates: [
+                        park['geometry']['coordinates'],
+                        [coordinates[1], coordinates[0]]
+                    ]
+                }
+            }]
+        }
+    
+        map.addSource('driving-route', {
+            type: 'geojson',
+            data: driving_route
+        });
+    
+        map.addLayer({
+            "id": "driving-route-line",
+            "type": "line",
+            "source": "driving-route",
+            "paint": {
+                "line-width": 3,
+                "line-color": "#23202A",
+                "line-dasharray": [0.2, 2]
+            },
+            "filter": ["==", "$type", "LineString"],
+        });
 
         map.addSource('route', {
             type: 'geojson',
@@ -78,7 +131,8 @@ document.getElementById('searchbar').onkeydown = async function(event) {
             "filter": ["==", "$type", "LineString"],
         });
 
-        var coordinates = geo.features[0].geometry.coordinates;
+        // Geographic coordinates of the LineString
+        var coordinates = driving_route.features[0].geometry.coordinates;
 
         // Pass the first coordinates in the LineString to `lngLatBounds` &
         // wrap each coordinate pair in `extend` to include them in the bounds
@@ -90,7 +144,7 @@ document.getElementById('searchbar').onkeydown = async function(event) {
         }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
 
         map.fitBounds(bounds, {
-            padding: 20
+            padding: 40
         });
     
         map.removeLayer("station-dots");
@@ -155,6 +209,8 @@ map.on('load', async function () {
     });
 
     var coordinates = await getLocationCoordinates();
+    lat = coordinates[0];
+    lon = coordinates[1];
 
     map.setCenter([coordinates[1], coordinates[0]]);
     map.setZoom(11);
@@ -162,80 +218,5 @@ map.on('load', async function () {
     new mapboxgl.Marker()
     .setLngLat([coordinates[1], coordinates[0]])
     .addTo(map);
-
-    var geoData = await getRoute(coordinates[0], coordinates[1]);
-    var routes = await geoData.json();
-    var geo = routes[0]['train_route']['geo_dict'];
-    var park = routes[0]['car_route']['station'];
-
-    new mapboxgl.Marker({color: "red"})
-    .setLngLat(park['geometry']['coordinates'])
-    .addTo(map);
-
-    var driving_route = {
-        type: "FeatureCollection",
-        features: [{
-            type: "Feature",
-            properties: {},
-            geometry: {
-                type: "LineString",
-                coordinates: [
-                    park['geometry']['coordinates'],
-                    [coordinates[1], coordinates[0]]
-                ]
-            }
-        }]
-    }
-
-    map.addSource('driving-route', {
-        type: 'geojson',
-        data: driving_route
-    });
-
-    map.addLayer({
-        "id": "driving-route-line",
-        "type": "line",
-        "source": "driving-route",
-        "paint": {
-            "line-width": 3,
-            "line-color": "#23202A",
-            "line-dasharray": [0.2, 2]
-        },
-        "filter": ["==", "$type", "LineString"],
-    });
-
-    map.addSource('route', {
-        type: 'geojson',
-        data: geo
-    });
-
-    map.addLayer({
-        "id": "route-line",
-        "type": "line",
-        "source": "route",
-        "paint": {
-            "line-width": 6,
-            "line-color": "#23202A"
-        },
-        "filter": ["==", "$type", "LineString"],
-    });
-
-    
-
-    // Geographic coordinates of the LineString
-    var coordinates = driving_route.features[0].geometry.coordinates;
-
-    // Pass the first coordinates in the LineString to `lngLatBounds` &
-    // wrap each coordinate pair in `extend` to include them in the bounds
-    // result. A variation of this technique could be applied to zooming
-    // to the bounds of multiple Points or Polygon geomteries - it just
-    // requires wrapping all the coordinates with the extend method.
-    var bounds = coordinates.reduce(function(bounds, coord) {
-        return bounds.extend(coord);
-    }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
-
-    map.fitBounds(bounds, {
-        padding: 40
-    });
 
 });
