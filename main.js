@@ -91,9 +91,50 @@ map.on('load', async function () {
     map.setCenter([coordinates[1], coordinates[0]]);
     map.setZoom(11);
 
+    new mapboxgl.Marker()
+    .setLngLat([coordinates[1], coordinates[0]])
+    .addTo(map);
+
     var geoData = await getRoute(coordinates[0], coordinates[1]);
     var routes = await geoData.json();
     var geo = routes[0]['train_route']['geo_dict'];
+    var park = routes[0]['car_route']['station'];
+
+    new mapboxgl.Marker({color: "red"})
+    .setLngLat(park['geometry']['coordinates'])
+    .addTo(map);
+
+    var driving_route = {
+        type: "FeatureCollection",
+        features: [{
+            type: "Feature",
+            properties: {},
+            geometry: {
+                type: "LineString",
+                coordinates: [
+                    park['geometry']['coordinates'],
+                    [coordinates[1], coordinates[0]]
+                ]
+            }
+        }]
+    }
+
+    map.addSource('driving-route', {
+        type: 'geojson',
+        data: driving_route
+    });
+
+    map.addLayer({
+        "id": "driving-route-line",
+        "type": "line",
+        "source": "driving-route",
+        "paint": {
+            "line-width": 3,
+            "line-color": "#23202A",
+            "line-dasharray": [0.2, 2]
+        },
+        "filter": ["==", "$type", "LineString"],
+    });
 
     map.addSource('route', {
         type: 'geojson',
@@ -114,7 +155,7 @@ map.on('load', async function () {
     map.removeLayer("station-dots");
 
     // Geographic coordinates of the LineString
-    var coordinates = geo.features[0].geometry.coordinates;
+    var coordinates = driving_route.features[0].geometry.coordinates;
 
     // Pass the first coordinates in the LineString to `lngLatBounds` &
     // wrap each coordinate pair in `extend` to include them in the bounds
@@ -126,7 +167,7 @@ map.on('load', async function () {
     }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
 
     map.fitBounds(bounds, {
-        padding: 20
+        padding: 40
     });
 
 });
