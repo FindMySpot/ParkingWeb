@@ -16,10 +16,12 @@ function getLocationCoordinates() {
     }));
 };
 
-function getRoute(lat, lon) {
-    var url = "http://23.97.154.233:8080/get-possible-routes/v1/lat/"+lat+"/lon/"+lon+"/destination/zurich"
+function getRoute(lat, lon, query) {
+    var url = "http://23.97.154.233:8080/get-possible-routes/v1/lat/"+lat+"/lon/"+lon+"/destination/"+query
     return fetch(url);
 };
+
+
 
 function addRouteToMap() {
     map.addSource('route', {
@@ -39,12 +41,45 @@ function addRouteToMap() {
     });
 };
 
-document.getElementById('searchbar').onkeydown = function(event) {
+document.getElementById('searchbar').onkeydown = async function(event) {
     // 13 is for Enter
     if (event.keyCode == 13) {
         query = document.getElementById('searchbar').value;
-        console.log(query)
-        addRouteToMap();
+
+        try {
+            await map.removeLayer("route-line");
+            await map.removeSource('route');
+        }
+        catch(err) {
+            console.log("WARNING Can't delete inexistent resource.");
+        }
+        
+        var coordinates = await getLocationCoordinates();
+        console.log(coordinates);
+        var geoData = await getRoute(coordinates[0], coordinates[1], query);
+        console.log(geoData);
+        var routes = await geoData.json();
+        console.log(routes);
+
+        map.addSource('route', {
+            type: 'geojson',
+            data: routes[0]['train_route']['geo_dict']
+        });
+    
+        map.addLayer({
+            "id": "route-line",
+            "type": "line",
+            "source": "route",
+            "paint": {
+                "line-width": 6,
+                "line-color": "#23202A"
+            },
+            "filter": ["==", "$type", "LineString"],
+        });
+
+        console.log(2);
+    
+        map.removeLayer("station-dots");
     }
 };
 
@@ -105,27 +140,8 @@ map.on('load', async function () {
         popup.remove();
     });
 
-    var coordinates = await getLocationCoordinates();
+    
 
-    var geoData = await getRoute(coordinates[0], coordinates[1]);
-    var routes = await geoData.json();
-
-    map.addSource('route', {
-        type: 'geojson',
-        data: routes[0]['train_route']['geo_dict']
-    });
-
-    map.addLayer({
-        "id": "route-line",
-        "type": "line",
-        "source": "route",
-        "paint": {
-            "line-width": 6,
-            "line-color": "#23202A"
-        },
-        "filter": ["==", "$type", "LineString"],
-    });
-
-    map.removeLayer("station-dots");
+    
 
 });
