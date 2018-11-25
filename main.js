@@ -90,10 +90,11 @@ map.on('load', async function () {
 
     var geoData = await getRoute(coordinates[0], coordinates[1]);
     var routes = await geoData.json();
+    var geo = routes[0]['train_route']['geo_dict'];
 
     map.addSource('route', {
         type: 'geojson',
-        data: routes[0]['train_route']['geo_dict']
+        data: geo
     });
 
     map.addLayer({
@@ -108,5 +109,21 @@ map.on('load', async function () {
     });
 
     map.removeLayer("station-dots");
+
+    // Geographic coordinates of the LineString
+    var coordinates = geo.features[0].geometry.coordinates;
+
+    // Pass the first coordinates in the LineString to `lngLatBounds` &
+    // wrap each coordinate pair in `extend` to include them in the bounds
+    // result. A variation of this technique could be applied to zooming
+    // to the bounds of multiple Points or Polygon geomteries - it just
+    // requires wrapping all the coordinates with the extend method.
+    var bounds = coordinates.reduce(function(bounds, coord) {
+        return bounds.extend(coord);
+    }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+
+    map.fitBounds(bounds, {
+        padding: 20
+    });
 
 });
