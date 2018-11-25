@@ -35,7 +35,6 @@ map.on('load', async function () {
         data: 'http://23.97.154.233:8080/geo/stations'
     });
 
-
     map.addLayer({
         "id": "station-dots",
         "type": "circle",
@@ -53,29 +52,6 @@ map.on('load', async function () {
             "circle-radius": 6
         },
         "filter": ["==", "$type", "Point"],
-    });
-
-    
-
-    var coordinates = await getLocationCoordinates();  
-
-    var geoData = await getRoute(coordinates[0], coordinates[1]);
-    var routes = await geoData.json();
-
-    map.addSource('route', {
-        type: 'geojson',
-        data: routes[0]['train_route']['geo_dict']
-    });
-
-    map.addLayer({
-        "id": "route-line",
-        "type": "line",
-        "source": "route",
-        "paint": {
-            "line-width": 6,
-            "line-color": "#23202A"
-        },
-        "filter": ["==", "$type", "LineString"],
     });
 
     // Create a popup, but don't add it to the map yet.
@@ -110,6 +86,27 @@ map.on('load', async function () {
         popup.remove();
     });
 
+    var coordinates = await getLocationCoordinates();
 
+    var geoData = await getRoute(coordinates[0], coordinates[1]);
+    var routes = await geoData.json();
+
+    map.addSource('route', {
+        type: 'geojson',
+        data: routes[0]['train_route']['geo_dict']
+    });
+
+    map.addLayer({
+        "id": "route-line",
+        "type": "line",
+        "source": "route",
+        "paint": {
+            "line-width": 6,
+            "line-color": "#23202A"
+        },
+        "filter": ["==", "$type", "LineString"],
+    });
+
+    map.removeLayer("station-dots");
 
 });
