@@ -23,6 +23,10 @@ var drive_popup = new mapboxgl.Popup({
     closeOnClick: false
 });
 
+function reserveSpot(station_name) {
+    console.log(station_name);
+}
+
 function getLocationCoordinates() {
     if (lat !== 0) {
         return new Promise(resolve => resolve([lat, lon]))
@@ -93,7 +97,7 @@ document.getElementById('searchbar').onkeydown = async function(event) {
         park_marker_popup.setLngLat(park['geometry']['coordinates'])
             .setHTML("<b>" + park["station_name"] + "</b><br /><span>Total Spaces: " + 
             park["properties"]["Number_parking_spaces"] + "</span>" + 
-            "<br /><span>Daily parking fee: " + daily_parking_fee + "</span>")
+            "<br /><span>Daily parking fee: " + daily_parking_fee + "</span><form><input class='MyButton' type='button' value='Reserve a spot' onclick='reserveSpot(\""+park['station_name']+"\")'/></form>")
             .addTo(map);
 
         park_marker = new mapboxgl.Marker({color: "red"})
@@ -179,7 +183,8 @@ document.getElementById('searchbar').onkeydown = async function(event) {
             // Populate the popup and set its coordinates
             // based on the feature found.
             train_popup.setLngLat(coordinates)
-                .setHTML("<b>Total cost: " + total_cost + " CHF</b><br/><span>Train cost: " + train_cost + " CHF</span>")
+                .setHTML("<b>Total cost: " + total_cost + " CHF</b><br/><span>Train cost: " + 
+                train_cost + " CHF</span><br/>")
                 .addTo(map);
         });
     
