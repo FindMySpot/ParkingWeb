@@ -12,6 +12,12 @@ var query = '';
 var park_marker = null;
 var park_marker_popup = null;
 
+// Create a popup, but don't add it to the map yet.
+var popup = new mapboxgl.Popup({
+    closeButton: false,
+    closeOnClick: false
+});
+
 function getLocationCoordinates() {
     if (lat !== 0) {
         return new Promise(resolve => resolve([lat, lon]))
@@ -59,6 +65,7 @@ document.getElementById('searchbar').onkeydown = async function(event) {
         var geoData = await getRoute(coordinates[0], coordinates[1], query);
         var routes = await geoData.json();
         var park = routes[0]['car_route']['station'];
+        var total_cost = routes[0]['total_cost'];
 
         map.setCenter([coordinates[1], coordinates[0]]);
         map.setZoom(11);
@@ -138,6 +145,31 @@ document.getElementById('searchbar').onkeydown = async function(event) {
 
         map.fitBounds(bounds, {
             padding: 40
+        });
+
+        // Display the price of the driving route
+        map.on('mouseenter', 'route-line', function (e) {
+            console.log(e.features[0].properties);
+            // Change the cursor style as a UI indicator.
+            map.getCanvas().style.cursor = 'pointer';
+            var coordinates = e.lngLat;
+            // Ensure that if the map is zoomed out such that multiple
+            // copies of the feature are visible, the popup appears
+            // over the copy being pointed to.
+            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            }
+
+            // Populate the popup and set its coordinates
+            // based on the feature found.
+            popup.setLngLat(coordinates)
+                .setHTML("<b>Total train cost:</b><br /><span>" + total_cost + " CHF</span>")
+                .addTo(map);
+        });
+    
+        map.on('mouseleave', 'route-line', function () {
+            map.getCanvas().style.cursor = '';
+            popup.remove();
         });
     }
 };
