@@ -8,6 +8,7 @@ var map = new mapboxgl.Map({
 
 var lat = 0;
 var lon = 0;
+var query = '';
 
 function getLocationCoordinates() {
     var a = navigator.geolocation.getCurrentPosition(function(location) {
@@ -16,26 +17,34 @@ function getLocationCoordinates() {
     });
 };
 
+document.getElementById('searchbar').onkeydown = function(event) {
+    // 13 is for Enter
+    if (event.keyCode == 13) {
+        query = document.getElementById('searchbar').value;
+        console.log(query)
+    }
+}
+
 map.on('load', function () {
     map.addSource('stations', {
         type: 'geojson',
         data: 'http://23.97.154.233:8080/geo/stations'
     });
-    map.addSource('route', {
-        type: 'geojson',
-        data: 'http://23.97.154.233:8080/route/start/tiefenbrunnen/end/laus'
-    });
+    //map.addSource('route', {
+    //    type: 'geojson',
+    //    data: 'http://23.97.154.233:8080/route/start/tiefenbrunnen/end/laus'
+    //});
 
-    map.addLayer({
-        "id": "route-line",
-        "type": "line",
-        "source": "route",
-        "paint": {
-            "line-width": 6,
-            "line-color": "#23202A"
-        },
-        "filter": ["==", "$type", "LineString"],
-    });
+    //map.addLayer({
+    //    "id": "route-line",
+    //    "type": "line",
+    //    "source": "route",
+    //    "paint": {
+    //        "line-width": 6,
+    //        "line-color": "#23202A"
+    //    },
+    //    "filter": ["==", "$type", "LineString"],
+    //});
 
 
     map.addLayer({
