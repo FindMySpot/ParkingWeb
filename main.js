@@ -28,35 +28,38 @@ function getRoute(lat, lon) {
     }
 };
 
+function addRouteToMap() {
+    map.addSource('route', {
+        type: 'geojson',
+        data: 'http://23.97.154.233:8080/route/start/tiefenbrunnen/end/laus'
+    });
+
+    map.addLayer({
+        "id": "route-line",
+        "type": "line",
+        "source": "route",
+        "paint": {
+            "line-width": 6,
+            "line-color": "#23202A"
+        },
+        "filter": ["==", "$type", "LineString"],
+    });
+};
+
 document.getElementById('searchbar').onkeydown = function(event) {
     // 13 is for Enter
     if (event.keyCode == 13) {
         query = document.getElementById('searchbar').value;
         console.log(query)
+        addRouteToMap();
     }
-}
+};
 
 map.on('load', async function () {
     map.addSource('stations', {
         type: 'geojson',
         data: 'http://23.97.154.233:8080/geo/stations'
     });
-    //map.addSource('route', {
-    //    type: 'geojson',
-    //    data: 'http://23.97.154.233:8080/route/start/tiefenbrunnen/end/laus'
-    //});
-
-    //map.addLayer({
-    //    "id": "route-line",
-    //    "type": "line",
-    //    "source": "route",
-    //    "paint": {
-    //        "line-width": 6,
-    //        "line-color": "#23202A"
-    //    },
-    //    "filter": ["==", "$type", "LineString"],
-    //});
-
 
     map.addLayer({
         "id": "station-dots",
