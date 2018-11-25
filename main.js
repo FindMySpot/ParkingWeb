@@ -13,7 +13,12 @@ var park_marker = null;
 var park_marker_popup = null;
 
 // Create a popup, but don't add it to the map yet.
-var popup = new mapboxgl.Popup({
+var train_popup = new mapboxgl.Popup({
+    closeButton: false,
+    closeOnClick: false
+});
+
+var drive_popup = new mapboxgl.Popup({
     closeButton: false,
     closeOnClick: false
 });
@@ -65,7 +70,17 @@ document.getElementById('searchbar').onkeydown = async function(event) {
         var geoData = await getRoute(coordinates[0], coordinates[1], query);
         var routes = await geoData.json();
         var park = routes[0]['car_route']['station'];
+
         var total_cost = routes[0]['total_cost'];
+        total_cost = Math.round(total_cost*100)/100
+
+        var train_cost = routes[0]['train_cost'];
+        train_cost = Math.round(train_cost*100)/100
+
+        var drive_cost = routes[0]['drive_cost'];
+        drive_cost = Math.round(drive_cost*100)/100
+
+        var daily_parking_fee = routes[0]['car_route']['station']['parking']['price_per_day'];
 
         map.setCenter([coordinates[1], coordinates[0]]);
         map.setZoom(11);
@@ -76,7 +91,9 @@ document.getElementById('searchbar').onkeydown = async function(event) {
         });
 
         park_marker_popup.setLngLat(park['geometry']['coordinates'])
-            .setHTML("<b>" + park["station_name"] + "</b><br /><span>Total Spaces: " + park["properties"]["Number_parking_spaces"] + "</span>")
+            .setHTML("<b>" + park["station_name"] + "</b><br /><span>Total Spaces: " + 
+            park["properties"]["Number_parking_spaces"] + "</span>" + 
+            "<br /><span>Daily parking fee: " + daily_parking_fee + "</span>")
             .addTo(map);
 
         park_marker = new mapboxgl.Marker({color: "red"})
@@ -110,7 +127,7 @@ document.getElementById('searchbar').onkeydown = async function(event) {
             "paint": {
                 "line-width": 3,
                 "line-color": "#23202A",
-                "line-dasharray": [0.2, 2]
+                "line-dasharray": [0.4, 2]
             },
             "filter": ["==", "$type", "LineString"],
         });
@@ -147,9 +164,8 @@ document.getElementById('searchbar').onkeydown = async function(event) {
             padding: 40
         });
 
-        // Display the price of the driving route
+        // Display the price of the train route
         map.on('mouseenter', 'route-line', function (e) {
-            console.log(e.features[0].properties);
             // Change the cursor style as a UI indicator.
             map.getCanvas().style.cursor = 'pointer';
             var coordinates = e.lngLat;
@@ -162,14 +178,38 @@ document.getElementById('searchbar').onkeydown = async function(event) {
 
             // Populate the popup and set its coordinates
             // based on the feature found.
-            popup.setLngLat(coordinates)
-                .setHTML("<b>Total train cost:</b><br /><span>" + total_cost + " CHF</span>")
+            train_popup.setLngLat(coordinates)
+                .setHTML("<b>Total cost: " + total_cost + " CHF</b><br/><span>Train cost: " + train_cost + " CHF</span>")
                 .addTo(map);
         });
     
         map.on('mouseleave', 'route-line', function () {
             map.getCanvas().style.cursor = '';
-            popup.remove();
+            train_popup.remove();
+        });
+
+        // Display the price of the driving route
+        map.on('mouseenter', 'driving-route-line', function (e) {
+            // Change the cursor style as a UI indicator.
+            map.getCanvas().style.cursor = 'pointer';
+            var coordinates = e.lngLat;
+            // Ensure that if the map is zoomed out such that multiple
+            // copies of the feature are visible, the popup appears
+            // over the copy being pointed to.
+            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            }
+
+            // Populate the popup and set its coordinates
+            // based on the feature found.
+            drive_popup.setLngLat(coordinates)
+                .setHTML("Fuel cost: " + drive_cost + " CHF<br/>")
+                .addTo(map);
+        });
+    
+        map.on('mouseleave', 'driving-route-line', function () {
+            map.getCanvas().style.cursor = '';
+            drive_popup.remove();
         });
     }
 };
